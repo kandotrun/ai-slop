@@ -1,0 +1,1 @@
+ALTER TABLE sites ADD COLUMN indexing_enabled INTEGER NOT NULL DEFAULT 0;

@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Retro-Cute UI — デザインシステム（Shadcn × Bootstrap 2）</title>
+    <meta name="description" content="インディゴ基調の光沢・ベベルで作る、レトロでかわいいUIデザインシステム。トークン・コンポーネント・使い方を1枚で。" />
+    <style>
+      /* ============================================================
+         Retro-Cute UI — Design Tokens
+         （このページ自身がこのデザインシステムで作られています）
+         ============================================================ */
+      :root {
+        /* Brand / accent */
+        --primary: #4f46e5;
+        --primary-strong: #4338ca;
+        --primary-soft: #eceaff;
+        /* Semantic */
+        --success: #3f9e42; --success-strong: #2f7d33;
+        --warning: #f2b134; --warning-ink: #5a4410;
+        --danger: #c0392b;  --danger-strong: #a5311f;
+        --info: #1f7fc7;
+        /* Neutrals */
+        --ink: #14141f; --body: #44444f; --muted: #6b6b7b;
+        --border: #e3e2f0; --border-soft: #ededf4;
+        --surface: #f4f4f8; --card: #ffffff;
+        /* Elevation & gloss primitives */
+        --bevel-top: inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+        --inset-well: inset 0 2px 5px rgba(40, 40, 80, 0.07);
+        --shadow-sm: 0 1px 2px rgba(24, 24, 27, 0.06);
+        --shadow-card: 0 1px 2px rgba(24, 24, 27, 0.05), 0 6px 18px -8px rgba(40, 40, 80, 0.14);
+        --shadow-pop: 0 18px 50px -18px rgba(40, 40, 90, 0.28);
+        /* The signature gloss overlay (works on ANY fill color) */
+        --gloss: linear-gradient(to bottom, rgba(255,255,255,0.24), rgba(255,255,255,0) 45%, rgba(0,0,0,0.18));
+        /* Shape & motion */
+        --radius: 12px; --radius-sm: 8px; --radius-pill: 999px;
+        --ease: cubic-bezier(0.4, 0, 0.2, 1); --dur: 150ms;
+        --font: "Helvetica Neue", Arial, ui-sans-serif, system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+        --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+      }
+      @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0; color: var(--ink); font-family: var(--font); line-height: 1.6;
+        background:
+          radial-gradient(900px 480px at 92% -6%, rgba(79,70,229,0.12), transparent 60%),
+          radial-gradient(700px 460px at -4% 102%, rgba(79,70,229,0.08), transparent 60%),
+          var(--surface);
+        -webkit-font-smoothing: antialiased;
+      }
+      a { color: var(--primary-strong); }
+
+      /* ---------- Layout ---------- */
+      .topbar {
+        position: sticky; top: 0; z-index: 20;
+        display: flex; align-items: center; gap: 14px;
+        padding: 12px 20px; border-bottom: 1px solid var(--border);
+        background-color: rgba(255,255,255,0.82); backdrop-filter: blur(10px);
+        box-shadow: var(--bevel-top);
+      }
+      .logo { width: 40px; height: 40px; border-radius: 11px; display: grid; place-content: center; color: #fff;
+        background-color: var(--primary); background-image: var(--gloss); background-repeat: no-repeat;
+        border: 1px solid var(--primary-strong); box-shadow: var(--bevel-top), 0 3px 8px -2px rgba(79,70,229,0.5); }
+      .topbar b { font-size: 16px; letter-spacing: -0.01em; }
+      .topbar .tag { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+      .topnav { margin-left: auto; display: flex; gap: 4px; }
+      .topnav a { text-decoration: none; color: var(--body); font-size: 13px; font-weight: 600; padding: 7px 12px; border-radius: var(--radius-sm); }
+      .topnav a:hover { background: var(--primary-soft); color: var(--primary-strong); }
+      @media (max-width: 720px) { .topnav { display: none; } }
+
+      .shell { max-width: 980px; margin: 0 auto; padding: 0 20px 80px; }
+      .hero { padding: 56px 0 8px; }
+      .hero h1 { font-size: clamp(32px, 6vw, 52px); line-height: 1.1; letter-spacing: -0.035em; margin: 14px 0 0; font-weight: 800; }
+      .hero h1 .ac { color: var(--primary); }
+      .hero p.lede { font-size: 18px; color: var(--body); max-width: 640px; margin: 16px 0 0; }
+      .eyebrow { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+        color: var(--primary-strong); background: var(--primary-soft); border: 1px solid #d6d2fb; box-shadow: var(--bevel-top);
+        padding: 5px 11px; border-radius: var(--radius-pill); }
+
+      section { padding-top: 56px; }
+      section > h2 { font-size: 26px; letter-spacing: -0.02em; margin: 0 0 6px; }
+      section > p.intro { color: var(--body); margin: 0 0 22px; max-width: 680px; }
+      h3.sub { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 26px 0 12px; }
+
+      .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+      .grid { display: grid; gap: 16px; }
+      .grid.cols2 { grid-template-columns: 1fr 1fr; }
+      @media (max-width: 680px) { .grid.cols2 { grid-template-columns: 1fr; } }
+
+      /* The component canvas + code block */
+      .demo { border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow-card); overflow: hidden; }
+      .demo .canvas { padding: 24px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+      .demo pre { margin: 0; padding: 16px 18px; background: #1c1b2e; color: #d7d6ef; font-family: var(--mono); font-size: 12.5px; line-height: 1.6; overflow-x: auto; border-top: 1px solid var(--border); }
+      .demo pre .c { color: #8b89b8; }
+      .demo pre .p { color: #b9a7ff; }
+
+      /* ============================================================
+         Components — copy these into your project
+         ============================================================ */
+      .btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: var(--radius-sm);
+        font: 600 14px/1 var(--font); cursor: pointer; border: 1px solid; background-repeat: no-repeat;
+        background-image: var(--gloss); transition: filter var(--dur) var(--ease), transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+        box-shadow: inset 0 0 0 1px rgba(0,0,0,0.16), var(--bevel-top), 0 1px 2px rgba(0,0,0,0.18), 0 2px 6px -1px rgba(0,0,0,0.12); }
+      .btn:hover { filter: brightness(1.05); }
+      .btn:active { transform: translateY(1px); }
+      .btn-primary { color: #fff; background-color: var(--primary); border-color: var(--primary-strong); }
+      .btn-success { color: #fff; background-color: var(--success); border-color: var(--success-strong); }
+      .btn-warning { color: var(--warning-ink); background-color: var(--warning); border-color: #d99e2c; }
+      .btn-danger  { color: #fff; background-color: var(--danger); border-color: var(--danger-strong); }
+      .btn-outline { color: #33333b; background-color: #fff; border-color: #d3d6df;
+        background-image: linear-gradient(to bottom, rgba(0,0,0,0) 55%, rgba(0,0,0,0.04));
+        box-shadow: var(--bevel-top), 0 1px 1px rgba(0,0,0,0.04), 0 2px 5px -1px rgba(0,0,0,0.06); }
+      .btn-ghost { color: var(--body); background: transparent; border-color: transparent; box-shadow: none; }
+      .btn-ghost:hover { background: var(--primary-soft); }
+
+      .panel { border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow-card); overflow: hidden; }
+      .panel-head { padding: 12px 16px; font-weight: 700; border-bottom: 1px solid var(--border-soft);
+        background-color: var(--card); background-image: linear-gradient(to bottom, #fff, color-mix(in oklab, var(--primary) 4%, #fff)); box-shadow: var(--bevel-top); }
+      .panel-body { padding: 16px; }
+
+      .well { background: color-mix(in oklab, var(--surface) 70%, #fff); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--inset-well); padding: 14px 16px; color: var(--body); }
+
+      .pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-pill);
+        box-shadow: var(--bevel-top); background-image: linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(0,0,0,0.06)); }
+      .pill-primary { color: #fff; background-color: var(--primary); }
+      .pill-success { color: #fff; background-color: var(--success); }
+      .pill-neutral { color: #33333b; background-color: #eceef3; }
+      .pill-soft { color: var(--primary-strong); background-color: var(--primary-soft); }
+
+      .alert { border-radius: var(--radius); padding: 12px 15px; font-size: 14px; border: 1px solid; box-shadow: var(--bevel-top); }
+      .alert-info    { background: linear-gradient(#eef5fd,#dcebfb); border-color: #bcd9f5; color: #1f5a8f; }
+      .alert-success { background: linear-gradient(#eef8ef,#dcf0de); border-color: #bfe3c2; color: var(--success-strong); }
+      .alert-warning { background: linear-gradient(#fff8e6,#ffeec0); border-color: #f2d790; color: #7a5a12; }
+      .alert-danger  { background: linear-gradient(#fdeeed,#fbdcd9); border-color: #f3bdb7; color: #9a3328; }
+
+      .field { display: block; font-size: 13px; font-weight: 600; color: #3f3f46; margin-bottom: 6px; }
+      .input { width: 100%; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid #cfd0db; background: #fff;
+        font: 14px var(--font); box-shadow: inset 0 1px 2px rgba(0,0,0,0.07); outline: none; transition: var(--dur) var(--ease); }
+      .input:focus { border-color: var(--primary); box-shadow: inset 0 1px 2px rgba(0,0,0,0.05), 0 0 0 3px color-mix(in oklab, var(--primary) 30%, transparent); }
+
+      table.ds { width: 100%; border-collapse: collapse; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; font-size: 13.5px; }
+      table.ds th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); background: #f1f2f8; padding: 9px 13px; font-weight: 700; }
+      table.ds td { padding: 11px 13px; border-top: 1px solid var(--border-soft); }
+      table.ds tbody tr:nth-child(even) td { background: color-mix(in oklab, var(--primary) 3%, #fff); }
+
+      .tabs { display: inline-flex; gap: 4px; padding: 4px; background: #ececf3; border-radius: var(--radius-sm); }
+      .tabs button { border: 0; cursor: pointer; padding: 7px 15px; border-radius: 7px; font: 600 13px var(--font); color: var(--muted); background: transparent; }
+      .tabs button.active { color: color-mix(in oklab, var(--primary) 82%, black); background-color: #fff;
+        background-image: linear-gradient(to bottom, #fff, color-mix(in oklab, var(--primary) 7%, #fff)); box-shadow: var(--bevel-top), var(--shadow-sm); }
+
+      /* Swatches & token tables */
+      .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+      .sw { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; background: var(--card); box-shadow: var(--shadow-sm); }
+      .sw .chip { height: 60px; box-shadow: var(--bevel-top); }
+      .sw .meta { padding: 8px 10px; font-size: 12px; }
+      .sw .meta b { display: block; font-size: 12.5px; }
+      .sw .meta code { font-family: var(--mono); color: var(--muted); font-size: 11px; }
+      table.tok { width: 100%; border-collapse: collapse; font-size: 13px; }
+      table.tok td, table.tok th { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
+      table.tok th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+      table.tok code { font-family: var(--mono); font-size: 12px; color: var(--primary-strong); }
+
+      .banner { display: flex; gap: 12px; align-items: center; margin: 28px 0 0; padding: 14px 16px;
+        border-radius: var(--radius); border: 1px solid #d6d2fb; box-shadow: var(--bevel-top);
+        background: linear-gradient(#f4f3ff, #eceaff); color: var(--primary-strong); font-size: 14px; }
+
+      footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13px; }
+      footer a { font-weight: 600; }
+      .muted { color: var(--muted); }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <span class="logo" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.5 5.2 5.7.8-4.1 4 1 5.6L12 21l-5.1 2.6 1-5.6-4.1-4 5.7-.8z"/></svg>
+      </span>
+      <div>
+        <b>Retro-Cute UI</b>
+        <div class="tag">design system</div>
+      </div>
+      <nav class="topnav">
+        <a href="#principles">原則</a>
+        <a href="#colors">カラー</a>
+        <a href="#elevation">立体感</a>
+        <a href="#components">コンポーネント</a>
+        <a href="#usage">使い方</a>
+      </nav>
+    </header>
+
+    <div class="shell">
+      <div class="hero">
+        <span class="eyebrow">Shadcn × Bootstrap 2</span>
+        <h1>レトロで<span class="ac">かわいい</span>、<br />でも使いやすいUI。</h1>
+        <p class="lede">Shadcn の構造に、Bootstrap 2 の“ぷくっとした”光沢・ベベルを少しだけ。インディゴ基調の、レトロでかわいいデザインシステムです。トークンとコンポーネントをコピーして、別プロジェクトでもそのまま使えます。</p>
+        <div class="row" style="margin-top:24px">
+          <button class="btn btn-primary">使ってみる</button>
+          <button class="btn btn-outline">コンポーネント一覧</button>
+        </div>
+        <div class="banner">
+          <span class="logo" style="width:34px;height:34px;border-radius:9px" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg></span>
+          <span>このHTMLをアップロードすると、<b>ギガサイト便</b>で認証付きURLとして安全に共有できます（このページ自体がデモ＆デザインシステムです）。</span>
+        </div>
+      </div>
+
+      <!-- PRINCIPLES -->
+      <section id="principles">
+        <h2>原則</h2>
+        <p class="intro">レトロな質感は“やりすぎない”。使いやすさを最優先に、ほんの少しの遊び心を足します。</p>
+        <div class="grid cols2">
+          <div class="panel"><div class="panel-head">① やわらかい立体感</div><div class="panel-body">上明→下暗の微グラデ＋上端ハイライト＋やわらか影で「ぷくっと」。ギラつかせず、上品に。</div></div>
+          <div class="panel"><div class="panel-head">② 色非依存のグロー</div><div class="panel-body">光沢は白/黒のオーバーレイで表現。塗り色（インディゴ・赤・緑…）に依存せず同じレシピで効きます。</div></div>
+          <div class="panel"><div class="panel-head">③ 使いやすさ最優先</div><div class="panel-body">フォーカスリング常時表示、コントラスト 4.5:1 以上、<code>prefers-reduced-motion</code> 尊重。</div></div>
+          <div class="panel"><div class="panel-head">④ インディゴが主役</div><div class="panel-body">アクセントは <code>#4f46e5</code> に統一。リンク・主要操作・アクティブ状態の“主役色”。</div></div>
+        </div>
+      </section>
+
+      <!-- COLORS -->
+      <section id="colors">
+        <h2>カラー</h2>
+        <p class="intro">主役はインディゴ。セマンティック色（成功/警告/危険/情報）とニュートラルで構成します。</p>
+        <div class="swatches">
+          <div class="sw"><div class="chip" style="background:#4f46e5"></div><div class="meta"><b>Primary</b><code>#4f46e5</code></div></div>
+          <div class="sw"><div class="chip" style="background:#4338ca"></div><div class="meta"><b>Primary strong</b><code>#4338ca</code></div></div>
+          <div class="sw"><div class="chip" style="background:#eceaff"></div><div class="meta"><b>Primary soft</b><code>#eceaff</code></div></div>
+          <div class="sw"><div class="chip" style="background:#3f9e42"></div><div class="meta"><b>Success</b><code>#3f9e42</code></div></div>
+          <div class="sw"><div class="chip" style="background:#f2b134"></div><div class="meta"><b>Warning</b><code>#f2b134</code></div></div>
+          <div class="sw"><div class="chip" style="background:#c0392b"></div><div class="meta"><b>Danger</b><code>#c0392b</code></div></div>
+          <div class="sw"><div class="chip" style="background:#14141f"></div><div class="meta"><b>Ink</b><code>#14141f</code></div></div>
+          <div class="sw"><div class="chip" style="background:#6b6b7b"></div><div class="meta"><b>Muted</b><code>#6b6b7b</code></div></div>
+          <div class="sw"><div class="chip" style="background:#f4f4f8"></div><div class="meta"><b>Surface</b><code>#f4f4f8</code></div></div>
+        </div>
+      </section>
+
+      <!-- ELEVATION / GLOSS -->
+      <section id="elevation">
+        <h2>立体感・光沢</h2>
+        <p class="intro">このシステムの“かわいさ”の核。共通の <code>--gloss</code> オーバーレイ＋ベベル＋影を、どの要素にも同じ値で使います。</p>
+        <div class="demo">
+          <div class="canvas">
+            <table class="tok">
+              <tr><th>トークン</th><th>値</th><th>用途</th></tr>
+              <tr><td><code>--gloss</code></td><td><code>linear-gradient(to bottom, rgba(255,255,255,.24), rgba(255,255,255,0) 45%, rgba(0,0,0,.18))</code></td><td>塗りの上に重ねる光沢</td></tr>
+              <tr><td><code>--bevel-top</code></td><td><code>inset 0 1px 0 0 rgba(255,255,255,.6)</code></td><td>上端ハイライト</td></tr>
+              <tr><td><code>--inset-well</code></td><td><code>inset 0 2px 5px rgba(40,40,80,.07)</code></td><td>へこみ（well）</td></tr>
+              <tr><td><code>--shadow-card</code></td><td><code>0 1px 2px …, 0 6px 18px -8px …</code></td><td>カードのやわらか影</td></tr>
+            </table>
+          </div>
+          <pre><span class="c">/* 塗り色は background-color、光沢は background-image で重ねる（shorthand は使わない） */</span>
+.btn-primary {
+  <span class="p">background-color</span>: var(--primary);
+  <span class="p">background-image</span>: var(--gloss);
+  <span class="p">box-shadow</span>: var(--bevel-top), 0 1px 2px rgba(0,0,0,.18);
+}</pre>
+        </div>
+      </section>
+
+      <!-- COMPONENTS -->
+      <section id="components">
+        <h2>コンポーネント</h2>
+        <p class="intro">そのままコピーして使えます。すべて自己完結（外部依存なし）。</p>
+
+        <h3 class="sub">ボタン</h3>
+        <div class="demo">
+          <div class="canvas">
+            <button class="btn btn-primary">保存する</button>
+            <button class="btn btn-success">公開</button>
+            <button class="btn btn-warning">下書き保存</button>
+            <button class="btn btn-danger">削除</button>
+            <button class="btn btn-outline">キャンセル</button>
+            <button class="btn btn-ghost">あとで</button>
+          </div>
+          <pre>&lt;button class=<span class="p">"btn btn-primary"</span>&gt;保存する&lt;/button&gt;
+&lt;button class=<span class="p">"btn btn-outline"</span>&gt;キャンセル&lt;/button&gt;</pre>
+        </div>
+
+        <div class="grid cols2" style="margin-top:16px">
+          <div>
+            <h3 class="sub">パネル / カード</h3>
+            <div class="panel">
+              <div class="panel-head">サイトの公開設定</div>
+              <div class="panel-body">上端ハイライト付きのグラデヘッダ＋やわらか影。情報のまとまりに。</div>
+            </div>
+          </div>
+          <div>
+            <h3 class="sub">well（補助パネル）</h3>
+            <div class="well">二次的な情報（補足・APIキー・メモ等）を、へこんだ枠でそっと区別します。</div>
+          </div>
+        </div>
+
+        <h3 class="sub">バッジ / ピル</h3>
+        <div class="demo"><div class="canvas">
+          <span class="pill pill-primary">Pro</span>
+          <span class="pill pill-success">公開中</span>
+          <span class="pill pill-neutral">下書き</span>
+          <span class="pill pill-soft">会社ドメイン認証</span>
+        </div></div>
+
+        <h3 class="sub">アラート</h3>
+        <div class="grid cols2">
+          <div class="alert alert-info">ℹ️ 情報メッセージ。補足やヒントに。</div>
+          <div class="alert alert-success">✅ 成功メッセージ。完了の合図に。</div>
+          <div class="alert alert-warning">⚠️ 警告メッセージ。注意喚起に。</div>
+          <div class="alert alert-danger">⛔ エラーメッセージ。失敗の通知に。</div>
+        </div>
+
+        <div class="grid cols2" style="margin-top:16px">
+          <div>
+            <h3 class="sub">フォーム</h3>
+            <div class="panel"><div class="panel-body">
+              <label class="field">公開ドメイン</label>
+              <input class="input" value="acme.co.jp" />
+              <p class="muted" style="font-size:12px;margin:8px 0 0">フォーカスでインディゴのグローが出ます。</p>
+            </div></div>
+          </div>
+          <div>
+            <h3 class="sub">タブ</h3>
+            <div class="panel"><div class="panel-body">
+              <div class="tabs"><button class="active">概要</button><button>認証設定</button><button>ログ</button></div>
+            </div></div>
+          </div>
+        </div>
+
+        <h3 class="sub">テーブル（ゼブラ）</h3>
+        <div class="panel"><div class="panel-body" style="padding:0">
+          <table class="ds">
+            <thead><tr><th>サイト</th><th>状態</th><th>認証方式</th><th>閲覧</th></tr></thead>
+            <tbody>
+              <tr><td>pitch-deck</td><td style="color:var(--success);font-weight:700">公開中</td><td><span class="pill pill-soft">会社ドメイン</span></td><td>128</td></tr>
+              <tr><td>lp-draft</td><td class="muted">下書き</td><td><span class="pill pill-soft">パスワード</span></td><td>0</td></tr>
+              <tr><td>demo</td><td style="color:var(--success);font-weight:700">公開中</td><td><span class="pill pill-success">公開</span></td><td>42</td></tr>
+            </tbody>
+          </table>
+        </div></div>
+      </section>
+
+      <!-- USAGE -->
+      <section id="usage">
+        <h2>使い方</h2>
+        <p class="intro">他プロジェクトへ持ち込む手順とルール。</p>
+        <ol class="muted" style="color:var(--body);line-height:1.9">
+          <li><b>トークンをコピー</b>：<code>:root</code> の CSS 変数（カラー・<code>--gloss</code>・<code>--bevel-top</code>・<code>--inset-well</code>・影）をそのまま貼り付け。</li>
+          <li><b>コンポーネントをコピー</b>：<code>.btn</code> / <code>.panel</code> / <code>.well</code> / <code>.pill</code> / <code>.alert</code> / <code>.input</code> / <code>.tabs</code> / <code>table.ds</code> を使用。</li>
+          <li><b>shorthand に注意</b>：塗りは必ず <code>background-color</code>。<code>background</code> ショートハンドは <code>background-image</code> の光沢を消すので使わない。</li>
+          <li><b>主役はインディゴ</b>：主要操作・リンク・アクティブ状態に <code>--primary</code>。テキストは黒系のまま。</li>
+          <li><b>アクセシビリティ</b>：フォーカスリングを残し、テキストのコントラストは 4.5:1 以上を確認。</li>
+        </ol>
+        <div class="well" style="margin-top:18px">
+          <b>レスポンシブ</b>：2カラムのグリッドは <code>@media (max-width: 680px)</code> で1カラムに。テーブルは横スクロール or カード化で。
+        </div>
+      </section>
+
+      <footer>
+        <p><b>Retro-Cute UI</b> — <span class="muted">ギガサイト便（giga-site.com）のデザインシステム。MIT 相当で自由に再利用してください。</span></p>
+        <p class="muted">Created by <a href="https://github.com/kandotrun">kandotrun</a> · <a href="https://giga-site.com">giga-site.com</a></p>
+      </footer>
+    </div>
+  </body>
+</html>

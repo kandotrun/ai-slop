@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      :root {
+        --primary: #4f46e5;
+        --primary-strong: #4338ca;
+        --ink: #14141f;
+        --muted: #6b6b7b;
+        --bevel: inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+      }
+      * { margin: 0; box-sizing: border-box; }
+      html, body { width: 1200px; height: 630px; }
+      body {
+        font-family: "Helvetica Neue", Arial, ui-sans-serif, system-ui, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(1100px 520px at 88% -8%, rgba(79, 70, 229, 0.16), transparent 60%),
+          radial-gradient(700px 500px at 6% 108%, rgba(79, 70, 229, 0.10), transparent 60%),
+          linear-gradient(160deg, #ffffff, #f1f1f9);
+        position: relative;
+        overflow: hidden;
+      }
+      .wrap { position: relative; height: 100%; display: grid; grid-template-columns: 1fr 0.92fr; gap: 40px; padding: 64px 60px; }
+
+      .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 30px; }
+      @font-face { font-family: "Yuji Syuku GigaSite"; src: url("data:font/truetype;base64,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") format("truetype"); font-weight: 400; font-style: normal; }
+      .brand-name { font-family: "Yuji Syuku GigaSite", "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: 34px; font-weight: 400; letter-spacing: 0.02em; color: var(--ink); }
+
+      h1 { font-size: 60px; line-height: 1.13; letter-spacing: -0.035em; font-weight: 800; }
+      h1 .ac { color: var(--primary); }
+      .sub { margin-top: 20px; font-size: 19px; line-height: 1.6; color: #44444f; max-width: 520px; }
+
+      .pills { display: flex; gap: 10px; margin-top: 28px; flex-wrap: wrap; }
+      .pill { display: inline-flex; align-items: center; gap: 7px; padding: 9px 15px; border-radius: 999px;
+        font-size: 15px; font-weight: 700; color: var(--primary-strong);
+        background-color: #eceaff; background-image: linear-gradient(to bottom, rgba(255,255,255,0.7), rgba(79,70,229,0.06));
+        border: 1px solid #d6d2fb; box-shadow: var(--bevel); }
+      .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); box-shadow: var(--bevel); }
+
+      /* Right: retro-cute browser mockup of the new UI */
+      .demo { align-self: center; }
+      .browser { border-radius: 16px; overflow: hidden; border: 1px solid #d7d6e6;
+        box-shadow: var(--bevel), 0 26px 60px -22px rgba(40, 40, 90, 0.4); background: #fff; }
+      .bbar { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background-image: linear-gradient(to bottom, #fbfbfe, #eef0f6); border-bottom: 1px solid #e6e6ef; }
+      .tl { width: 11px; height: 11px; border-radius: 50%; box-shadow: var(--bevel); }
+      .url { margin-left: 10px; flex: 1; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; color: var(--muted);
+        background: #fff; border: 1px solid #e4e4ef; border-radius: 999px; padding: 5px 12px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); }
+      .bbody { padding: 18px; }
+      .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+      .h2 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+      .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 9px; font-size: 13px; font-weight: 700;
+        color: #fff; background-color: var(--primary); border: 1px solid var(--primary-strong);
+        background-image: linear-gradient(to bottom, rgba(255,255,255,0.3), rgba(255,255,255,0) 45%, rgba(0,0,0,0.18));
+        box-shadow: var(--bevel), 0 1px 2px rgba(0,0,0,0.2); }
+      table { width: 100%; border-collapse: collapse; border: 1px solid #e3e3ee; border-radius: 11px; overflow: hidden; font-size: 13.5px; }
+      th { text-align: left; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); background: #f1f2f8; padding: 9px 13px; font-weight: 700; }
+      td { padding: 11px 13px; border-top: 1px solid #ededf4; }
+      tbody tr:nth-child(even) td { background: #f7f7fc; }
+      .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 999px; box-shadow: var(--bevel); }
+      .b-ok { color: #fff; background-color: #3f9e42; background-image: linear-gradient(to bottom, rgba(255,255,255,0.35), rgba(0,0,0,0.1)); }
+      .b-ac { color: var(--primary-strong); background-color: #eceaff; }
+      .st { font-weight: 700; }
+      .st-ok { color: #3f9e42; }
+      .st-mut { color: var(--muted); }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="left">
+        <div class="brand">
+          <div class="brand-name">ギガサイト便</div>
+        </div>
+
+        <h1>HTMLを、<br /><span class="ac">認証付きURL</span>で<br />安全に共有。</h1>
+        <p class="sub">AIで作った HTML / zip を、パスワード・メール・会社ドメイン認証付きで。サーバー不要、数秒で公開。</p>
+
+        <div class="pills">
+          <span class="pill"><span class="dot"></span>数秒で公開</span>
+          <span class="pill"><span class="dot"></span>認証付き</span>
+          <span class="pill"><span class="dot"></span>サーバー不要</span>
+        </div>
+      </div>
+
+      <div class="demo">
+        <div class="browser">
+          <div class="bbar">
+            <span class="tl" style="background:linear-gradient(#ff8a80,#ec6a5e)"></span>
+            <span class="tl" style="background:linear-gradient(#ffe08a,#f4be4f)"></span>
+            <span class="tl" style="background:linear-gradient(#8ee08a,#61c554)"></span>
+            <span class="url">🔒 your-site.giga-site.com</span>
+          </div>
+          <div class="bbody">
+            <div class="toolbar">
+              <span class="h2">サイト</span>
+              <span class="btn">＋ 新規公開</span>
+            </div>
+            <table>
+              <thead><tr><th>サイト</th><th>状態</th><th>認証</th></tr></thead>
+              <tbody>
+                <tr><td>pitch-deck</td><td class="st st-ok">公開中</td><td><span class="badge b-ac">会社ドメイン</span></td></tr>
+                <tr><td>lp-draft</td><td class="st st-mut">下書き</td><td><span class="badge b-ac">パスワード</span></td></tr>
+                <tr><td>demo</td><td class="st st-ok">公開中</td><td><span class="badge b-ok">公開</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

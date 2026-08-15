@@ -1,0 +1,6 @@
+self-hosted-runner:
+  labels:
+    - ai-slop-hermes
+config-variables:
+  - PAGESPEED_ENABLED
+  - DEPLOY_ENABLED

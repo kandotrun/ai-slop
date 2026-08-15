@@ -1,0 +1,28 @@
+{
+  "name": "@giga-site/cli",
+  "version": "0.1.0",
+  "private": false,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kandotrun/ai-slop.git",
+    "directory": "packages/cli"
+  },
+  "type": "module",
+  "bin": {
+    "giga": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

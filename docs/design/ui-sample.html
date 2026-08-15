@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ギガサイト便 — UI サンプル（レトロかわいい / Shadcn × Bootstrap 2）</title>
+    <style>
+      :root {
+        --primary: #4f46e5;
+        --primary-strong: #4338ca;
+        --success: #3f9e42;
+        --warning: #f2b134;
+        --danger: #c0392b;
+        --fg: #1c1c22;
+        --muted: #6b6b7b;
+        --border: #e0e0ec;
+        --bevel-top: inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+        --inset-well: inset 0 2px 5px rgba(40, 40, 80, 0.07);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", sans-serif;
+        color: var(--fg);
+        background: #f4f4f8;
+        line-height: 1.5;
+      }
+      .wrap { max-width: 980px; margin: 0 auto; padding: 40px 24px 80px; }
+      h1 { font-size: 26px; letter-spacing: -0.02em; margin: 0 0 4px; }
+      .lede { color: var(--muted); margin: 0 0 32px; }
+      h2 { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 32px 0 12px; }
+      .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+      @media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
+
+      /* Buttons */
+      .btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 9px 15px; border-radius: 8px; font-size: 14px; font-weight: 600;
+        border: 1px solid; cursor: pointer; font-family: inherit;
+        background-repeat: no-repeat;
+        box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18), var(--bevel-top), 0 1px 2px rgba(0,0,0,0.18), 0 2px 6px -1px rgba(0,0,0,0.12);
+        background-image: linear-gradient(to bottom, rgba(255,255,255,0.22), rgba(255,255,255,0) 45%, rgba(0,0,0,0.18));
+        transition: 140ms ease;
+      }
+      .btn:active { transform: translateY(1px); }
+      .btn-primary { color: #fff; background-color: var(--primary); border-color: var(--primary-strong); }
+      .btn-success { color: #fff; background-color: var(--success); border-color: #2f7d33; }
+      .btn-warning { color: #5a4410; background-color: var(--warning); border-color: #d99e2c; }
+      .btn-danger  { color: #fff; background-color: var(--danger); border-color: #a5311f; }
+      .btn-outline {
+        color: #33333b; background-color: #fff; border-color: #d3d6df;
+        background-image: linear-gradient(to bottom, rgba(0,0,0,0) 55%, rgba(0,0,0,0.04));
+        box-shadow: var(--bevel-top), 0 1px 1px rgba(0,0,0,0.04), 0 2px 5px -1px rgba(0,0,0,0.06);
+      }
+
+      /* Panel */
+      .panel { background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05), 0 4px 14px -6px rgba(40,40,80,0.12); }
+      .panel-head { padding: 12px 16px; font-weight: 700; font-size: 14px; border-bottom: 1px solid #e7e7f1;
+        background-image: linear-gradient(to bottom, #ffffff, #f4f5fb); box-shadow: var(--bevel-top); }
+      .panel-body { padding: 16px; }
+
+      /* Well */
+      .well { background: #f5f5f9; border: 1px solid #e2e2ec; border-radius: 10px;
+        box-shadow: var(--inset-well); padding: 14px 16px; color: var(--muted); font-size: 13px; }
+
+      /* Pills */
+      .pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; color: #fff;
+        box-shadow: var(--bevel-top); background-image: linear-gradient(to bottom, rgba(255,255,255,0.32), rgba(0,0,0,0.10)); margin-right: 6px; }
+      .pill-primary { background-color: var(--primary); }
+      .pill-success { background-color: var(--success); }
+      .pill-neutral { background-color: #6b6b7b; }
+
+      /* Table */
+      table { width: 100%; border-collapse: collapse; border: 1px solid #e2e2ec; border-radius: 10px; overflow: hidden; font-size: 13px; }
+      th { background: #f1f2f8; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; text-align: left; padding: 9px 12px; }
+      td { padding: 10px 12px; border-top: 1px solid #ececf3; }
+      tbody tr:nth-child(even) td { background: #f8f8fc; }
+
+      /* Inputs */
+      label.f { display: block; font-size: 12px; font-weight: 600; color: #3f3f46; margin-bottom: 6px; }
+      .input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid #cfd0db; background: #fff;
+        font-size: 14px; font-family: inherit; box-shadow: inset 0 1px 2px rgba(0,0,0,0.07); outline: none; }
+      .input:focus { border-color: var(--primary); box-shadow: inset 0 1px 2px rgba(0,0,0,0.05), 0 0 0 3px rgba(79,70,229,0.22); }
+
+      /* Alerts */
+      .alert { border-radius: 10px; padding: 11px 14px; font-size: 13px; border: 1px solid; box-shadow: var(--bevel-top); margin-bottom: 10px; }
+      .alert-info    { background: linear-gradient(#eef5fd,#dcebfb); border-color: #bcd9f5; color: #1f5a8f; }
+      .alert-success { background: linear-gradient(#eef8ef,#dcf0de); border-color: #bfe3c2; color: #2f7d33; }
+      .alert-warning { background: linear-gradient(#fff8e6,#ffeec0); border-color: #f2d790; color: #7a5a12; }
+      .alert-danger  { background: linear-gradient(#fdeeed,#fbdcd9); border-color: #f3bdb7; color: #9a3328; }
+
+      /* Nav */
+      .nav { display: inline-flex; gap: 4px; padding: 4px; background: #ececf3; border-radius: 10px; }
+      .nav a { padding: 7px 14px; border-radius: 7px; font-size: 13px; font-weight: 600; color: var(--muted); text-decoration: none; }
+      .nav a.active { color: var(--primary-strong); background-image: linear-gradient(to bottom, #ffffff, #eef0fb);
+        box-shadow: var(--bevel-top), 0 1px 2px rgba(0,0,0,0.06); }
+
+      @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>ギガサイト便 — UI サンプル</h1>
+      <p class="lede">レトロかわいい（Shadcn × Bootstrap 2）／インディゴ基調。この見た目を LP・管理画面に適用します。<code>DESIGN.md</code> 参照。</p>
+
+      <h2>ボタン</h2>
+      <div class="row">
+        <button class="btn btn-primary">保存する</button>
+        <button class="btn btn-success">公開</button>
+        <button class="btn btn-warning">下書き保存</button>
+        <button class="btn btn-danger">削除</button>
+        <button class="btn btn-outline">キャンセル</button>
+      </div>
+
+      <div class="grid2" style="margin-top:24px;">
+        <div>
+          <h2>パネル</h2>
+          <div class="panel">
+            <div class="panel-head">サイトの公開設定 <span class="pill pill-primary" style="float:right;">Pro</span></div>
+            <div class="panel-body">
+              <label class="f">公開ドメイン</label>
+              <input class="input" value="acme.co.jp" />
+              <div class="row" style="margin-top:14px;">
+                <button class="btn btn-primary">保存する</button>
+                <button class="btn btn-outline">取消</button>
+              </div>
+            </div>
+          </div>
+
+          <h2>well（補助パネル）</h2>
+          <div class="well">APIキーやエージェント向けの補助情報など、二次的な内容をまとめる枠。やわらかい内側の影で“へこみ”を表現。</div>
+
+          <h2>バッジ / ピル</h2>
+          <div class="row">
+            <span class="pill pill-success">公開中</span>
+            <span class="pill pill-neutral">下書き</span>
+            <span class="pill pill-primary">会社ドメイン認証</span>
+          </div>
+        </div>
+
+        <div>
+          <h2>アラート</h2>
+          <div class="alert alert-info">ℹ️ 無料プランは7日間の公開です。延長はアップグレードで。</div>
+          <div class="alert alert-success">✅ サイトを公開しました。</div>
+          <div class="alert alert-warning">⚠️ セキュリティチェックで警告が見つかりました。</div>
+          <div class="alert alert-danger">⛔ アップロードに失敗しました。</div>
+
+          <h2>テーブル（ゼブラ）</h2>
+          <table>
+            <thead><tr><th>サイト</th><th>状態</th><th>認証</th></tr></thead>
+            <tbody>
+              <tr><td>sample</td><td style="color:var(--success);font-weight:600;">公開中</td><td>ランダムURL</td></tr>
+              <tr><td>demo</td><td style="color:var(--muted);">下書き</td><td>—</td></tr>
+              <tr><td>pitch-deck</td><td style="color:var(--success);font-weight:600;">公開中</td><td>パスワード</td></tr>
+            </tbody>
+          </table>
+
+          <h2>ナビ（アクティブ）</h2>
+          <nav class="nav">
+            <a class="active">概要</a>
+            <a>認証設定</a>
+            <a>アクセスログ</a>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

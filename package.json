@@ -1,0 +1,42 @@
+{
+  "name": "giga-site-bin",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kandotrun/ai-slop.git"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "dev:worker": "wrangler dev --local",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "build": "vite build",
+    "pagespeed:check": "node scripts/pagespeed-insights-check.mjs",
+    "react-doctor:check": "node scripts/react-doctor-ci-check.mjs",
+    "cli:typecheck": "npm --prefix packages/cli run typecheck",
+    "cli:build": "npm --prefix packages/cli run build",
+    "check": "npm run typecheck && npm run cli:typecheck && npm test -- --run && npm run build && npm run cli:build",
+    "cf:types": "wrangler types && node scripts/strip-trailing-whitespace.mjs worker-configuration.d.ts",
+    "cf:dry-run": "npm run build && CI=1 wrangler deploy --dry-run"
+  },
+  "dependencies": {
+    "fflate": "^0.8.3",
+    "hono": "^4.13.2",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "sonner": "^2.0.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.21",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.0.2",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.10",
+    "wrangler": "^4.123.0"
+  }
+}
