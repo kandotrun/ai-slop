@@ -3,7 +3,7 @@ import type { Screen } from "./routes";
 import { formatBytes } from "./format";
 import { formatSiteLimit } from "../../shared/plans";
 import { BrandName } from "../BrandName";
-import { CreditCardIcon, HelpCircleIcon, LayoutGridIcon, LogOutIcon, UploadCloudIcon } from "../ui/icons";
+import { CreditCardIcon, HelpCircleIcon, LayoutGridIcon, LogOutIcon, ShieldCheckIcon, UploadCloudIcon } from "../ui/icons";
 
 interface SidebarProps {
   active: Screen;
@@ -43,6 +43,12 @@ export function Sidebar({ active, onNavigate, siteCount, siteLimit, storageBytes
           <CreditCardIcon size={17} />
           <span>課金・プラン</span>
         </button>
+        {user.isOperator === true ? (
+          <button className={`gs-nav-item${active === "operations" ? " is-active" : ""}`} aria-current={active === "operations" ? "page" : undefined} onClick={() => onNavigate("operations")}>
+            <ShieldCheckIcon size={17} />
+            <span>運営</span>
+          </button>
+        ) : null}
       </nav>
 
       <div className="gs-sidebar-foot">

@@ -13,6 +13,7 @@ import { DashboardScreen } from "./screens/DashboardScreen";
 import { UploadScreen } from "./screens/UploadScreen";
 import { DetailScreen } from "./screens/DetailScreen";
 import { BillingScreen } from "./screens/BillingScreen";
+import { OperationsScreen } from "./screens/OperationsScreen";
 import "../styles/tokens.css";
 import "../styles/app.css";
 
@@ -29,7 +30,8 @@ const EMPTY_STATS: DashboardStats = {
 const CRUMBS: Record<Exclude<Screen, "detail">, string> = {
   dashboard: "ダッシュボード",
   upload: "新規アップロード",
-  billing: "課金・プラン"
+  billing: "課金・プラン",
+  operations: "運営ダッシュボード"
 };
 
 function browserRoute(): AdminRoute {
@@ -276,6 +278,7 @@ export function AdminApp() {
           if (next === "dashboard") navigateTo({ screen: "dashboard", search });
           if (next === "upload") navigateTo({ screen: "upload" });
           if (next === "billing") navigateTo({ screen: "billing" });
+          if (next === "operations") navigateTo({ screen: "operations" });
         }}
         siteCount={sites.length}
         siteLimit={planSiteLimit(planId)}
@@ -289,6 +292,7 @@ export function AdminApp() {
           crumb={crumb}
           status={status}
           showSearch={screen === "dashboard"}
+          showUpload={screen !== "operations"}
           searchValue={search}
           onSearch={setDashboardSearch}
           onUpload={() => navigateTo({ screen: "upload" })}
@@ -348,6 +352,8 @@ export function AdminApp() {
               <p className="gs-muted">サイト情報を読み込み中です...</p>
             </div>
           ) : null}
+
+          {screen === "operations" ? <OperationsScreen user={authUser} /> : null}
 
           {screen === "billing" ? (
             <BillingScreen siteCount={sites.length} storageBytes={stats.totalBytes} setStatus={setStatus} onError={reportError} />

@@ -1,10 +1,11 @@
-export type Screen = "dashboard" | "upload" | "detail" | "billing";
+export type Screen = "dashboard" | "upload" | "detail" | "billing" | "operations";
 export type DetailTab = "overview" | "auth" | "forms" | "revisions" | "comments" | "logs";
 
 export type AdminRoute =
   | { screen: "dashboard"; search: string }
   | { screen: "upload" }
   | { screen: "billing" }
+  | { screen: "operations" }
   | { screen: "detail"; siteId: string; tab: DetailTab };
 
 const DEFAULT_BASE_PATH = "/app";
@@ -38,6 +39,7 @@ export function parseAdminRoute(url: URL, basePath = DEFAULT_BASE_PATH): AdminRo
   const segments = path.slice(baseWithSlash.length).replace(/\/+$/, "").split("/").filter(Boolean);
   if (segments[0] === "upload" && segments.length === 1) return { screen: "upload" };
   if (segments[0] === "billing" && segments.length === 1) return { screen: "billing" };
+  if (segments[0] === "ops" && segments.length === 1) return { screen: "operations" };
   if (segments[0] === "sites" && segments[1]) {
     const siteId = safeDecode(segments[1]);
     const tabCandidate = segments[2] ?? "overview";
@@ -60,6 +62,7 @@ export function buildAdminUrl(route: AdminRoute, basePath = DEFAULT_BASE_PATH): 
   }
   if (route.screen === "upload") return `${prefix}/upload`;
   if (route.screen === "billing") return `${prefix}/billing`;
+  if (route.screen === "operations") return `${prefix}/ops`;
 
   const sitePath = `${prefix}/sites/${encodeURIComponent(route.siteId)}`;
   return route.tab === "overview" ? sitePath : `${sitePath}/${route.tab}`;

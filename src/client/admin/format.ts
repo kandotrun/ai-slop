@@ -33,7 +33,7 @@ export function formatDate(value: string | null): string {
   return SHORT_DATE_FORMATTER.format(new Date(value));
 }
 
-function formatJapanDateTime(value: string): string {
+export function formatJapanDateTime(value: string): string {
   return JAPAN_DATE_TIME_FORMATTER.format(new Date(value));
 }
 

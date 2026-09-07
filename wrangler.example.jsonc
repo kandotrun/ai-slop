@@ -25,6 +25,8 @@
     "OLLAMA_SECURITY_MODEL": "deepseek-v4-pro:cloud",
     "PAID_CHECKOUT_ENABLED": "false",
     "GA_MEASUREMENT_ID": "",
+    "OPERATOR_EMAILS": "",
+    "OPS_INTERNAL_EMAILS": "",
     "MAX_HTML_BYTES": "10485760",
     "MAX_UPLOAD_FILES": "200",
     "SESSION_TTL_SECONDS": "86400"
