@@ -18,6 +18,7 @@ import type {
   SiteTool
 } from "../../shared/types";
 import type { ClaimResponse, PublicPublishPasswordResponse, PublicPublishResponse } from "../../shared/anon-publish";
+import type { OperatorPage, OperatorPeriod, OperatorSite, OperatorSummary, OperatorUser } from "../../shared/operator";
 import { measurementHeaders } from "../measurement";
 
 export interface AppUser {
@@ -25,6 +26,7 @@ export interface AppUser {
   email: string;
   name: string;
   image?: string | null;
+  isOperator?: boolean;
 }
 
 export interface HealthResponse {
@@ -158,7 +160,24 @@ async function fetchJson<T>(input: RequestInfo, init?: RequestInit): Promise<T> 
   return json as T;
 }
 
+export interface OperatorListQuery {
+  period: OperatorPeriod;
+  q: string;
+  offset: number;
+  limit: number;
+}
+
+function operatorQuery(query: OperatorListQuery): string {
+  return new URLSearchParams({ period: query.period, q: query.q, offset: String(query.offset), limit: String(query.limit) }).toString();
+}
+
 export const api = {
+  opsSummary: (period: OperatorPeriod, signal?: AbortSignal) =>
+    fetchJson<OperatorSummary>(`/api/ops/summary?${new URLSearchParams({ period })}`, { signal }),
+  opsSites: (query: OperatorListQuery, signal?: AbortSignal) =>
+    fetchJson<OperatorPage<OperatorSite>>(`/api/ops/sites?${operatorQuery(query)}`, { signal }),
+  opsUsers: (query: OperatorListQuery, signal?: AbortSignal) =>
+    fetchJson<OperatorPage<OperatorUser>>(`/api/ops/users?${operatorQuery(query)}`, { signal }),
   health: () => fetchJson<HealthResponse>("/api/health"),
   bootstrap: () => fetchJson<AuthBootstrapResponse>("/api/auth/bootstrap"),
   me: () => fetchJson<{ user: AppUser }>("/api/me"),

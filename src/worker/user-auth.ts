@@ -3,6 +3,7 @@ export interface UserSessionUser {
   email: string;
   name: string;
   image?: string | null;
+  emailVerified?: boolean;
 }
 
 export interface UserSessionData {
@@ -57,6 +58,7 @@ interface SessionJoinRow {
   created_at: string;
   updated_at: string;
   email: string;
+  email_verified: number;
   name?: string | null;
   image?: string | null;
 }
@@ -315,7 +317,7 @@ export async function verifyUserLoginCode(env: Env, request: Request, body: { ch
 
   return {
     ok: true,
-    user: { id: user.id, email: user.email, name: user.name || user.email, image: user.image ?? null },
+    user: { id: user.id, email: user.email, name: user.name || user.email, image: user.image ?? null, emailVerified: true },
     setCookie: sessionCookie(request, token, maxAge)
   };
 }
@@ -325,7 +327,7 @@ export async function getUserSession(env: Env, request: Request): Promise<UserSe
   if (!token) return null;
   const tokenHash = await sha256Hex(token);
   const row = await env.DB.prepare(
-    `SELECT sess.*, u.email, u.name, u.image
+    `SELECT sess.*, u.email, u.name, u.image, u.email_verified
      FROM auth_sessions sess
      JOIN users u ON u.id = sess.user_id
      WHERE sess.token = ? AND sess.expires_at > ?
@@ -335,7 +337,7 @@ export async function getUserSession(env: Env, request: Request): Promise<UserSe
     .first<SessionJoinRow>();
   if (!row) return null;
   return {
-    user: { id: row.user_id, email: row.email, name: row.name || row.email, image: row.image ?? null },
+    user: { id: row.user_id, email: row.email, name: row.name || row.email, image: row.image ?? null, emailVerified: row.email_verified === 1 },
     session: { id: row.id, userId: row.user_id, token: row.token, expiresAt: row.expires_at, createdAt: row.created_at, updatedAt: row.updated_at }
   };
 }

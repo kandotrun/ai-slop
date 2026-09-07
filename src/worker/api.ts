@@ -55,6 +55,8 @@ import { scanUploadWithAiSecurity, type OllamaSecurityRuntimeEnv } from "./secur
 import { formSubmissionsCsv, getFormSubmission, listFormSubmissionDetails, listFormSubmissions } from "./form-submissions";
 import { handleMeasurementRequest, recordMeasurementEvent, type MeasurementRecordInput } from "./measurement";
 import { reserveAnonymousPublishAttempt } from "./anonymous-publish-rate-limit";
+import { isOperator, operatorAuthUser } from "./operator-auth";
+import { createOperatorRouter } from "./operator";
 import {
   FREE_PLAN_PUBLISH_DAYS,
   FORM_SUBMISSIONS_MIN_PLAN_LABEL,
@@ -709,9 +711,6 @@ function requestOriginAllowed(request: Request, env: Env): boolean {
   return true;
 }
 
-function mapUserSession(session: UserSessionData) {
-  return { user: { id: session.user.id, email: session.user.email, name: session.user.name, image: session.user.image ?? null } };
-}
 
 function normalizeSiteUpdateInput(body: SiteUpdateInput): { ok: true; value: NormalizedSiteUpdate } | { ok: false; error: string } {
   const value: NormalizedSiteUpdate = {};
@@ -1233,7 +1232,18 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
   const app = new Hono<{ Bindings: Env; Variables: ApiVariables }>();
 
   app.use("/api/*", async (c, next) => {
-    const pathname = new URL(c.req.url).pathname;
+    const pathname = c.req.path;
+    const operational = pathname === "/api/ops" || pathname.startsWith("/api/ops/");
+    await next();
+    if (operational || pathname === "/api/me" || pathname === "/api/auth/verify-code") {
+      c.header("Cache-Control", "private, no-store");
+      c.header("Vary", "Cookie", { append: true });
+    }
+  });
+
+  app.use("/api/*", async (c, next) => {
+    const pathname = c.req.path;
+    const operational = pathname === "/api/ops" || pathname.startsWith("/api/ops/");
     if (isPublicApiPath(pathname)) {
       await next();
       return;
@@ -1242,6 +1252,9 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
     if (!session) {
       return jsonError("session_required", 401);
     }
+    if (operational && !isOperator(session.user, c.env)) {
+      return jsonError("operator_required", 403);
+    }
     if (!requestOriginAllowed(c.req.raw, c.env)) {
       return jsonError("csrf_origin_denied", 403);
     }
@@ -1249,6 +1262,8 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
     c.set("ownerEmail", session.user.email);
     await next();
   });
+
+  app.route("/api/ops", createOperatorRouter());
 
   app.get("/api/health", (c) => c.json({ ok: true, service: "giga-site-bin", runtime: "cloudflare-workers" }));
 
@@ -1587,7 +1602,7 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
       ownerUserId: result.user.id,
       metadata: { auth_flow: "email_otp" }
     });
-    const response = c.json({ user: result.user });
+    const response = c.json({ user: operatorAuthUser(result.user, c.env) });
     response.headers.append("Set-Cookie", result.setCookie);
     return response;
   });
@@ -1604,7 +1619,7 @@ export function createApiApp(options: CreateApiAppOptions = {}) {
     if (!session) {
       return jsonError("session_required", 401);
     }
-    return c.json(mapUserSession(session));
+    return c.json({ user: operatorAuthUser(session.user, c.env) });
   });
 
   app.get("/api/billing/stripe/config", (c) => c.json({ stripe: getPublicStripeConfigStatus(stripeEnv(c.env)) }));

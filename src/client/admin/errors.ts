@@ -3,6 +3,7 @@
 // string that already reads as Japanese is passed through unchanged.
 
 const ERROR_MESSAGES: Record<string, string> = {
+  operator_connection_failed: "サーバーに接続できませんでした。接続状態を確認し、再試行してください。",
   plan_required: "この機能は Pro プランで利用できます。「課金・プラン」からアップグレードしてください。",
   session_required: "ログインの有効期限が切れました。お手数ですが、再度ログインしてください。",
   site_not_found: "対象のサイトが見つかりませんでした。",

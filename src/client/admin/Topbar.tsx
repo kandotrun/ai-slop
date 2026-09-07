@@ -6,13 +6,14 @@ interface TopbarProps {
   crumb: string;
   status?: string;
   showSearch: boolean;
+  showUpload?: boolean;
   searchValue: string;
   onSearch: (value: string) => void;
   onUpload: () => void;
   onMenu: () => void;
 }
 
-export function Topbar({ crumb, status, showSearch, searchValue, onSearch, onUpload, onMenu }: TopbarProps) {
+export function Topbar({ crumb, status, showSearch, showUpload = true, searchValue, onSearch, onUpload, onMenu }: TopbarProps) {
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -53,10 +54,12 @@ export function Topbar({ crumb, status, showSearch, searchValue, onSearch, onUpl
           </div>
         ) : null}
 
-        <Button onClick={onUpload}>
-          <PlusIcon size={16} />
-          新規公開
-        </Button>
+        {showUpload ? (
+          <Button onClick={onUpload}>
+            <PlusIcon size={16} />
+            新規公開
+          </Button>
+        ) : null}
       </div>
     </header>
   );
