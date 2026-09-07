@@ -58,12 +58,12 @@ Cloudflare上の設定変更とデプロイは、別途承認を得て既存の 
 | --- | --- |
 | `registeredUsers` | 取得時点までに作成された登録ユーザー数。期間フィルター外の総数 |
 | `newUsers` | 期間内に `users.created_at` がある登録ユーザー数 |
-| `publishedSites` | 期間内に作成され、現在のrevisionが存在するサイト数。匿名を含み、内部を除外 |
+| `publishedSites` | 保存されている最初のrevision作成日時（サイトごとの `MIN(revisions.created_at)`）が期間内にあり、現在のrevisionが存在するサイト数。匿名を含み、内部を除外 |
 | `anonymousSites` | 上記のうち、現在の所有者が予約ユーザー `anon-public` のサイト数。人数ではない |
 | `registeredSites` | 上記のうち、登録ユーザー所有のサイト数 |
 | `activeCreators` | 期間内にrevisionが作成された公開済みサイトの、登録所有者の重複なし件数 |
 | `previewViews` | 公開済みサイトの期間内の `access_events.event_type = 'view'` 件数。認証成功や失敗は除外 |
-| `liveSites` | 取得時点の公開中サイト総数。revisionが存在し、未削除、statusがactive、期限内または無期限 |
+| `liveSites` | 取得時点の公開中サイト総数。現在のrevisionが存在し、初回公開が取得時点未満、未削除、statusがactive、期限内または無期限 |
 | `paidSubscriptions` | 取得時点の `livemode = 1` かつ `status = 'active'` の登録所有者のサブスクリプション件数 |
 | `returningCreators` | 期間内の異なる日本標準時の日付で2日以上revisionを作成した、登録所有者の重複なし件数 |
 
@@ -75,8 +75,12 @@ Cloudflare上の設定変更とデプロイは、別途承認を得て既存の 
 無料トライアル、Stripeテストモード、解約済みサブスクリプションは有料契約数に含めません。
 有料契約数はD1に同期された状態の件数であり、入金済み請求書や売上を示すものではありません。
 
-論理削除された公開済みサイトは過去の公開件数に残ります。
-物理削除済みの履歴は復元できません。
+公開集計の対象は、同じサイトに属する現在のrevisionが存在し、保存されている最初のrevision作成日時が `generatedAt` 未満のサイトです。
+新規公開ページ数と日別の `sites` は、この初回公開日時を期間判定と日本標準時の日付に使います。
+サイト作成日時や現在のrevision作成日時は使わず、古い下書きの初回公開を計上し、差し替えで過去の公開日を移動させません。
+再投稿やrevisionの復元は新規公開ページ数を増やさず、`activeCreators` と `returningCreators` の投稿活動に含めます。
+論理削除された公開済みサイトは、現在のrevisionが存在する限り過去の公開件数に残ります。
+物理削除済みの履歴は復元できず、最初のrevisionを削除すると、残っている最古のrevision日時に集計基準が変わります。
 一覧の `fileCount` と `totalBytes` は現在のrevision、ユーザーの `siteCount` は公開済みサイト総数、`lastPublishedAt` は最後のrevision作成日時です。
 revisionの復元操作も新しいrevisionを作るため、投稿活動に含まれます。
 

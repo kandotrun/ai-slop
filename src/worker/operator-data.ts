@@ -13,11 +13,14 @@ const PEOPLE_SQL = `people AS (
   FROM users
 )`;
 
-const PUBLISHED_SQL = `published AS (
-  SELECT s.id, s.owner_user_id, s.created_at, s.status, s.expires_at, s.deleted_at, u.segment
+const PUBLISHED_SQL = `first_publications AS (
+  SELECT site_id, MIN(created_at) AS first_published_at FROM revisions GROUP BY site_id
+), published AS (
+  SELECT s.id, s.owner_user_id, p.first_published_at, s.status, s.expires_at, s.deleted_at, u.segment
   FROM sites s JOIN people u ON u.id = s.owner_user_id
   JOIN revisions r ON r.id = s.current_revision_id AND r.site_id = s.id
-  WHERE s.created_at < ?3
+  JOIN first_publications p ON p.site_id = s.id
+  WHERE p.first_published_at < ?3
 ), eligible_sites AS (SELECT * FROM published WHERE segment <> 'internal')`;
 
 function bindings(env: Env, window: OperatorWindow): [string, string, string, string] {
@@ -28,7 +31,7 @@ function bindings(env: Env, window: OperatorWindow): [string, string, string, st
 export async function operatorSummary(env: Env, window: OperatorWindow): Promise<OperatorSummary> {
   const values = bindings(env, window);
   const metrics = await env.DB.prepare(`WITH ${PEOPLE_SQL}, ${PUBLISHED_SQL},
-    window_sites AS (SELECT * FROM eligible_sites WHERE created_at >= ?1 AND created_at < ?2),
+    window_sites AS (SELECT * FROM eligible_sites WHERE first_published_at >= ?1 AND first_published_at < ?2),
     creators AS (
       SELECT s.owner_user_id, COUNT(DISTINCT date(r.created_at, '+9 hours')) AS days
       FROM revisions r JOIN eligible_sites s ON s.id = r.site_id
@@ -55,8 +58,8 @@ export async function operatorSummary(env: Env, window: OperatorWindow): Promise
     SELECT date(created_at, '+9 hours') AS date, COUNT(*) AS newUsers, 0 AS sites, 0 AS views
       FROM people WHERE segment = 'registered' AND created_at >= ?1 AND created_at < ?2 GROUP BY date
     UNION ALL
-    SELECT date(created_at, '+9 hours') AS date, 0, COUNT(*), 0
-      FROM eligible_sites WHERE created_at >= ?1 AND created_at < ?2 GROUP BY date
+    SELECT date(first_published_at, '+9 hours') AS date, 0, COUNT(*), 0
+      FROM eligible_sites WHERE first_published_at >= ?1 AND first_published_at < ?2 GROUP BY date
     UNION ALL
     SELECT date(e.created_at, '+9 hours') AS date, 0, 0, COUNT(*)
       FROM access_events e JOIN eligible_sites s ON s.id = e.site_id

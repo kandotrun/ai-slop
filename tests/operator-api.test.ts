@@ -242,6 +242,63 @@ function populatedFixture() {
 }
 
 describe("operator summary SQL", () => {
+  it.each(["registered", "anonymous"])("counts an old draft first published in the window as %s without changing list creation dates", async (segment) => {
+    const f = operatorFixture();
+    f.user("a", "a@example.com");
+    f.site("old-draft", segment === "anonymous" ? "anon-public" : "a", OLD, { draft: true });
+    f.revision("old-draft", "first", START);
+    f.sqlite.prepare("UPDATE sites SET current_revision_id = ? WHERE id = ?").run("first", "old-draft");
+    const result = await f.get<OperatorSummary>("summary?period=yesterday");
+    expect(result.metrics).toMatchObject({ publishedSites: 1, anonymousSites: segment === "anonymous" ? 1 : 0, registeredSites: segment === "registered" ? 1 : 0 });
+    expect(result.daily).toEqual([{ date: "2026-02-09", newUsers: 0, sites: 1, views: 0 }]);
+    expect((await f.get<OperatorPage<OperatorSite>>("sites?period=yesterday")).items).toEqual([]);
+    expect((await f.get<OperatorPage<OperatorSite>>("sites?period=all")).items[0].createdAt).toBe(OLD);
+  });
+
+  it.each([END, NOW])("does not count a site created in the window but first published at %s", async (publishedAt) => {
+    const f = operatorFixture();
+    f.user("a", "a@example.com");
+    f.site("later", "a", START, { draft: true });
+    f.revision("later", "first", publishedAt);
+    f.sqlite.prepare("UPDATE sites SET current_revision_id = ? WHERE id = ?").run("first", "later");
+    const result = await f.get<OperatorSummary>("summary?period=yesterday");
+    expect(result.metrics).toMatchObject({ publishedSites: 0, registeredSites: 0, activeCreators: 0, liveSites: publishedAt === NOW ? 0 : 1 });
+    expect(result.daily[0].sites).toBe(0);
+    if (publishedAt === NOW) {
+      const all = await f.get<OperatorSummary>("summary?period=all");
+      expect(all.metrics).toMatchObject({ publishedSites: 0, liveSites: 0 });
+      expect(all.daily.every((day) => day.sites === 0)).toBe(true);
+    }
+  });
+
+  it("keeps the first publication day unchanged when the current revision is replaced", async () => {
+    const f = operatorFixture();
+    f.user("a", "a@example.com");
+    f.site("existing", "a", OLD, { draft: true });
+    f.revision("existing", "first", "2026-02-07T15:00:00.000Z");
+    f.sqlite.prepare("UPDATE sites SET current_revision_id = ? WHERE id = ?").run("first", "existing");
+    const before = await f.get<OperatorSummary>("summary?period=all");
+    expect(before.daily.filter((day) => day.sites > 0)).toEqual([{ date: "2026-02-08", newUsers: 0, sites: 1, views: 0 }]);
+    f.revision("existing", "latest", START);
+    f.sqlite.prepare("UPDATE sites SET current_revision_id = ? WHERE id = ?").run("latest", "existing");
+    const yesterday = await f.get<OperatorSummary>("summary?period=yesterday");
+    expect(yesterday.metrics).toMatchObject({ publishedSites: 0, activeCreators: 1, returningCreators: 0 });
+    expect(yesterday.daily[0].sites).toBe(0);
+    const after = await f.get<OperatorSummary>("summary?period=all");
+    expect(after.daily).toEqual(before.daily);
+    expect(after.metrics).toMatchObject({ publishedSites: 1, activeCreators: 1, returningCreators: 1 });
+  });
+
+  it("does not count stored revisions without a successful current revision", async () => {
+    const f = operatorFixture();
+    f.user("a", "a@example.com");
+    f.site("unpublished", "a", START, { draft: true });
+    f.revision("unpublished", "unselected", START);
+    const result = await f.get<OperatorSummary>("summary?period=yesterday");
+    expect(result.metrics).toMatchObject({ publishedSites: 0, activeCreators: 0, liveSites: 0 });
+    expect(result.daily[0].sites).toBe(0);
+  });
+
   it("counts yesterday's JST outcomes without join multiplication, pseudo users, internal usage or auth events", async () => {
     const f = populatedFixture();
     f.sqlite.exec("PRAGMA query_only = ON");
