@@ -11,9 +11,30 @@ const OLD = "2026-01-01T00:00:00.000Z";
 const OPERATOR = "operator@example.com";
 const databases: DatabaseSync[] = [];
 
+function enforceD1LikePatternLimit(sqlite: DatabaseSync) {
+  const native = new DatabaseSync(":memory:");
+  databases.push(native);
+  const like = native.prepare("SELECT ?2 LIKE ?1 AS result");
+  const escapedLike = native.prepare("SELECT ?2 LIKE ?1 ESCAPE ?3 AS result");
+  function checkPattern(pattern: SQLInputValue) {
+    if (typeof pattern === "string" && Buffer.byteLength(pattern, "utf8") > 50) {
+      throw new Error("LIKE or GLOB pattern too complex");
+    }
+  }
+  sqlite.function("like", (pattern, value) => {
+    checkPattern(pattern);
+    return like.get(pattern, value)!.result;
+  });
+  sqlite.function("like", (pattern, value, escape) => {
+    checkPattern(pattern);
+    return escapedLike.get(pattern, value, escape)!.result;
+  });
+}
+
 function fixture() {
   const sqlite = new DatabaseSync(":memory:");
   databases.push(sqlite);
+  enforceD1LikePatternLimit(sqlite);
   const migrations = new URL("../migrations/", import.meta.url);
   for (const file of readdirSync(migrations).filter((file) => file.endsWith(".sql")).sort()) {
     sqlite.exec(readFileSync(new URL(file, migrations), "utf8"));
@@ -364,6 +385,50 @@ describe("operator summary SQL", () => {
 });
 
 describe("operator lists", () => {
+  it("models D1's UTF-8 LIKE limit while retaining native SQLite matching", () => {
+    const { sqlite } = fixture();
+    for (const pattern of ["x".repeat(49), "x".repeat(50), "あ".repeat(16)]) {
+      expect(sqlite.prepare("SELECT ? LIKE ? AS matched").get(pattern, pattern)?.matched).toBe(1);
+    }
+    for (const pattern of ["x".repeat(51), "あ".repeat(17)]) {
+      expect(() => sqlite.prepare("SELECT ? LIKE ?").get(pattern, pattern)).toThrow("LIKE or GLOB pattern too complex");
+      expect(() => sqlite.prepare("SELECT ? LIKE ? ESCAPE '\\'").get(pattern, pattern)).toThrow("LIKE or GLOB pattern too complex");
+    }
+    expect(sqlite.prepare("SELECT 'A%_\\' LIKE 'a\\%\\_\\\\' ESCAPE '\\' AS matched").get()?.matched).toBe(1);
+  });
+
+  describe.each([
+    ["sites", "title"], ["sites", "slug"], ["sites", "email"], ["sites", "name"],
+    ["users", "email"], ["users", "name"]
+  ])("long literal search in %s %s", (route, field) => {
+    it.each(["Ab".repeat(30), "日本語検索".repeat(6), "X".repeat(200)])("matches the complete term %s without D1 pattern errors", async (term) => {
+      const f = operatorFixture();
+      f.user("target", "target@example.com");
+      f.site("target", "target", START);
+      f.site("other", "op", START);
+      const value = `prefix${term}suffix`;
+      if (field === "email") f.sqlite.prepare("UPDATE users SET email = ? WHERE id = 'target'").run(`${value}@example.com`);
+      if (field === "name") f.sqlite.prepare("UPDATE users SET name = ? WHERE id = 'target'").run(value);
+      if (field === "title") f.sqlite.prepare("UPDATE sites SET title = ? WHERE id = 'target'").run(value);
+      if (field === "slug") f.sqlite.prepare("UPDATE sites SET slug = ? WHERE id = 'target'").run(value);
+      const q = term.length === 200 ? term.toLowerCase() : `  ${term.toLowerCase()}  `;
+      const match = await f.get<OperatorPage<OperatorSite | OperatorUser>>(`${route}?period=all&q=${encodeURIComponent(q)}`);
+      expect(match.total).toBe(1);
+      expect(match.items.map((item) => item.id)).toEqual(["target"]);
+      const missing = `${term.slice(0, -1)}!`;
+      const noMatch = await f.get<OperatorPage<OperatorSite | OperatorUser>>(`${route}?period=all&q=${encodeURIComponent(missing)}`);
+      expect(noMatch).toMatchObject({ total: 0, items: [], hasMore: false });
+      const empty = await f.get<OperatorPage<OperatorSite | OperatorUser>>(`${route}?period=all&q=%20%20`);
+      expect(empty.total).toBe(2);
+      expect(empty.items).toHaveLength(2);
+    });
+  });
+
+  it.each(["sites", "users"])("rejects 201 search units in %s before aggregate reads", async (route) => {
+    const f = operatorFixture();
+    expect((await f.response(`${route}?q=${"x".repeat(201)}`)).status).toBe(400);
+    expect(f.queries).toHaveLength(1);
+  });
   it("paginates stably, includes soft-deleted and draft metadata, and projects only safe fields", async () => {
     const f = populatedFixture();
     f.sqlite.exec("PRAGMA query_only = ON");
