@@ -105,10 +105,11 @@ export async function operatorSites(env: Env, window: OperatorWindow, query: Ope
     FROM sites s JOIN people u ON u.id = s.owner_user_id
     LEFT JOIN revisions r ON r.id = s.current_revision_id AND r.site_id = s.id
     WHERE s.created_at >= ?1 AND s.created_at < ?2 AND (
-      COALESCE(s.title, '') LIKE ?5 ESCAPE '\\' OR s.slug LIKE ?5 ESCAPE '\\' OR u.email LIKE ?5 ESCAPE '\\' OR u.name LIKE ?5 ESCAPE '\\'
+      instr(lower(COALESCE(s.title, '')), lower(?5)) > 0 OR instr(lower(s.slug), lower(?5)) > 0
+      OR instr(lower(u.email), lower(?5)) > 0 OR instr(lower(u.name), lower(?5)) > 0
     )
   )`;
-  const values = [...bindings(env, window), query.pattern];
+  const values = [...bindings(env, window), query.searchTerm];
   const total = await env.DB.prepare(`${filter} SELECT COUNT(*) AS total FROM filtered`).bind(...values).first<{ total: number }>();
   const rows = await env.DB.prepare(`${filter} SELECT f.*,
     (SELECT COUNT(*) FROM access_events e WHERE e.site_id = f.id AND e.event_type = 'view' AND e.created_at < ?3) AS views
@@ -128,9 +129,9 @@ export async function operatorUsers(env: Env, window: OperatorWindow, query: Ope
   const filter = `WITH ${PEOPLE_SQL}, filtered AS (
     SELECT id, email, name, segment, created_at AS createdAt FROM people
     WHERE segment <> 'anonymous' AND created_at >= ?1 AND created_at < ?2
-      AND (email LIKE ?5 ESCAPE '\\' OR name LIKE ?5 ESCAPE '\\')
+      AND (instr(lower(email), lower(?5)) > 0 OR instr(lower(name), lower(?5)) > 0)
   )`;
-  const values = [...bindings(env, window), query.pattern];
+  const values = [...bindings(env, window), query.searchTerm];
   const total = await env.DB.prepare(`${filter} SELECT COUNT(*) AS total FROM filtered`).bind(...values).first<{ total: number }>();
   const rows = await env.DB.prepare(`${filter}, user_sites AS (
     SELECT s.id, s.owner_user_id, s.created_at FROM sites s

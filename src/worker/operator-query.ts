@@ -15,7 +15,7 @@ export interface OperatorWindow {
 export interface OperatorListQuery {
   offset: number;
   limit: number;
-  pattern: string;
+  searchTerm: string;
 }
 
 export function operatorWindow(params: URLSearchParams, now = new Date()): OperatorWindow | null {
@@ -54,6 +54,5 @@ export function operatorListQuery(params: URLSearchParams): OperatorListQuery | 
   const offset = boundedInteger(params.get("offset"), 0, 0, 1_000_000);
   const query = params.get("q") ?? "";
   if (limit === null || offset === null || query.length > 200 || query.includes("\0")) return null;
-  const pattern = `%${query.trim().replace(/[\\%_]/g, (char) => `\\${char}`)}%`;
-  return { limit, offset, pattern };
+  return { limit, offset, searchTerm: query.trim() };
 }
